@@ -95,6 +95,12 @@ class Resizer {
 		
 		// Resample - create image canvas of x, y size
 		$this->image_resized = imagecreatetruecolor(  $optimal_width  , $optimal_height  );
+		
+		// Default the backgroud to white incase image is transparent.
+		$white = imagecolorallocate($this->image_resized, 255, 255, 255);
+		imagefill($this->image_resized, 0, 0, $white);
+		
+		// Create the new image.
 		imagecopyresampled( $this->image_resized , $this->image , 0 , 0 , 0 , 0 , $optimal_width , $optimal_height , $this->width , $this->height );
 		
 		// if option is 'crop', then crop too
