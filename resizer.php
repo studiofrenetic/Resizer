@@ -87,19 +87,19 @@ class Resizer {
 	 */
 	public function resize( $new_width , $new_height , $option = 'auto' )
 	{
-		// Get optimal width and height - based on $option
+		// Get optimal width and height - based on $option.
 		$option_array = $this->get_dimensions( $new_width , $new_height , $option );
 		
 		$optimal_width	= $option_array['optimal_width'];
 		$optimal_height	= $option_array['optimal_height'];
 		
-		// Resample - create image canvas of x, y size
+		// Resample - create image canvas of x, y size.
 		$this->image_resized = imagecreatetruecolor(  $optimal_width  , $optimal_height  );
 		
-		// Keeps transparent backgrounds on gifs and pngs.  Jpegs are fine because they have no transparencies.
-		imagecolortransparent($this->image_resized, imagecolorallocatealpha($this->image_resized, 0, 0, 0, 127));
-		imagealphablending($this->image_resized, false);
-		imagesavealpha($this->image_resized, true);
+		// Retain transparency for PNG and GIF files.
+		imagecolortransparent( $this->image_resized , imagecolorallocatealpha( $this->image_resized , 0 , 0 , 0 , 127 ) );
+		imagealphablending( $this->image_resized , false );
+		imagesavealpha( $this->image_resized , true );
 		
 		// Create the new image.
 		imagecopyresampled( $this->image_resized , $this->image , 0 , 0 , 0 , 0 , $optimal_width , $optimal_height , $this->width , $this->height );
