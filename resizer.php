@@ -96,9 +96,10 @@ class Resizer {
 		// Resample - create image canvas of x, y size
 		$this->image_resized = imagecreatetruecolor(  $optimal_width  , $optimal_height  );
 		
-		// Default the backgroud to white incase image is transparent.
-		$white = imagecolorallocate($this->image_resized, 255, 255, 255);
-		imagefill($this->image_resized, 0, 0, $white);
+		// Keeps transparent backgrounds on gifs and pngs.  Jpegs are fine because they have no transparencies.
+		imagecolortransparent($this->image_resized, imagecolorallocatealpha($this->image_resized, 0, 0, 0, 127));
+		imagealphablending($this->image_resized, false);
+		imagesavealpha($this->image_resized, true);
 		
 		// Create the new image.
 		imagecopyresampled( $this->image_resized , $this->image , 0 , 0 , 0 , 0 , $optimal_width , $optimal_height , $this->width , $this->height );
