@@ -97,7 +97,7 @@ class Resizer {
 		$this->image_resized = imagecreatetruecolor( $optimal_width , $optimal_height );
 		
 		// Retain transparency for PNG and GIF files.
-		imagecolortransparent( $this->image_resized , imagecolorallocatealpha( $this->image_resized , 0 , 0 , 0 , 127 ) );
+		imagecolortransparent( $this->image_resized , imagecolorallocatealpha( $this->image_resized , 255 , 255 , 255 , 127 ) );
 		imagealphablending( $this->image_resized , false );
 		imagesavealpha( $this->image_resized , true );
 		
@@ -396,7 +396,7 @@ class Resizer {
 		imagesavealpha( $this->image_resized , true );
 		
 		imagefilledrectangle( $this->image_resized , 0 , 0 , $new_width , $new_height,
-			imagecolorallocatealpha( $this->image_resized , 0 , 0 , 0 , 127 )
+			imagecolorallocatealpha( $this->image_resized , 255 , 255 , 255 , 127 )
 		);
 		
 		imagecopyresampled( $this->image_resized , $crop , $dest_offset_x , $dest_offset_y , $crop_start_x , $crop_start_y , $dest_width , $dest_height , $dest_width , $dest_height );
