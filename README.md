@@ -35,7 +35,7 @@ In your routes.php file or in any of your controller files, you can start the Re
 Then you can start resizing your images by simply calling:
 
     Resizer::open( mixed $file )
-        ->resize( int $width , int $height , string 'exact, portrait, landscape, auto or crop' )
+        ->resize( int $width , int $height , string 'exact, portrait, landscape, fit, auto or crop' )
         ->save( string 'path/to/file.jpg' , int $quality );
 
 ## Example
