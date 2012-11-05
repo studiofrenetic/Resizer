@@ -1,28 +1,28 @@
 <?php
-
+	
 /**
  * Provides a very simple way to resize an image.
- * 
+ *
  * Credits to Jarrod Oberto.
  * Jarrod wrote a tutorial on NetTuts.
  * http://net.tutsplus.com/tutorials/php/image-resizing-made-easy-with-php/
- * 
+ *
  * I only turned it into a Laravel bundle.
- * 
+ *
  * @package Resizer
  * @version 1.0
  * @author Maikel D (original author Jarrod Oberto)
- * @link 
+ * @link
  * @example
  * 		Resizer::open( mixed $file )
  *			->resize( int $width , int $height , string 'exact, portrait, landscape, auto or crop' )
  *			->save( string 'path/to/file.jpg' , int $quality );
- *		
+ *
  *		// Resize and save an image.
  * 		Resizer::open( Input::file('field_name') )
  *			->resize( 800 , 600 , 'crop' )
  *			->save( 'path/to/file.jpg' , 100 );
- *		
+ *
  *		// Recompress an image.
  *		Resizer::open( 'path/to/image.jpg' )
  *			->save( 'path/to/new_image.jpg' , 60 );
@@ -94,18 +94,18 @@ class Resizer {
 		$optimal_height	= $option_array['optimal_height'];
 		
 		// Resample - create image canvas of x, y size.
-		$this->image_resized = imagecreatetruecolor(  $optimal_width  , $optimal_height  );
+		$this->image_resized = imagecreatetruecolor( $optimal_width , $optimal_height );
 		
 		// Retain transparency for PNG and GIF files.
-		imagecolortransparent( $this->image_resized , imagecolorallocatealpha( $this->image_resized , 0 , 0 , 0 , 127 ) );
+		imagecolortransparent( $this->image_resized , imagecolorallocatealpha( $this->image_resized , 255 , 255 , 255 , 127 ) );
 		imagealphablending( $this->image_resized , false );
 		imagesavealpha( $this->image_resized , true );
 		
 		// Create the new image.
 		imagecopyresampled( $this->image_resized , $this->image , 0 , 0 , 0 , 0 , $optimal_width , $optimal_height , $this->width , $this->height );
 		
-		// if option is 'crop', then crop too
-		if ( $option == 'crop' ) {
+		// if option is 'crop' or 'fit', then crop too
+		if ( $option == 'crop' || $option == 'fit' ) {
 			$this->crop( $optimal_width , $optimal_height , $new_width , $new_height );
 		}
 		
@@ -125,7 +125,7 @@ class Resizer {
 		if ( !$this->image_resized ) {
 			$this->image_resized = $this->image;
 		}
-
+		
 		// Get extension of the output file
 		$extension = strtolower( File::extension($save_path) );
 		
@@ -179,8 +179,8 @@ class Resizer {
 		// If $file isn't an array, we'll turn it into one
 		if ( !is_array($file) ) {
 			$file = array(
-				'type' => File::mime( strtolower(File::extension($file)) ),
-				'tmp_name' => $file
+				'type'		=> File::mime( strtolower(File::extension($file)) ),
+				'tmp_name'	=> $file
 			);
 		}
 		
@@ -227,6 +227,11 @@ class Resizer {
 				$optimal_width	= $option_array['optimal_width'];
 				$optimal_height	= $option_array['optimal_height'];
 				break;
+			case 'fit':
+				$option_array	= $this->get_size_by_fit( $new_width , $new_height );
+				$optimal_width	= $option_array['optimal_width'];
+				$optimal_height	= $option_array['optimal_height'];
+				break;
 			case 'crop':
 				$option_array	= $this->get_optimal_crop( $new_width , $new_height );
 				$optimal_width	= $option_array['optimal_width'];
@@ -235,8 +240,8 @@ class Resizer {
 		}
 		
 		return array(
-			'optimal_width' => $optimal_width,
-			'optimal_height' => $optimal_height
+			'optimal_width'		=> $optimal_width,
+			'optimal_height'	=> $optimal_height
 		);
 	}
 	
@@ -247,8 +252,8 @@ class Resizer {
 	 */
 	private function get_size_by_fixed_height( $new_height )
 	{
-		$ratio = $this->width / $this->height;
-		$new_width = $new_height * $ratio;
+		$ratio		= $this->width / $this->height;
+		$new_width	= $new_height * $ratio;
 		
 		return $new_width;
 	}
@@ -260,8 +265,8 @@ class Resizer {
 	 */
 	private function get_size_by_fixed_width( $new_width )
 	{
-		$ratio = $this->height / $this->width;
-		$new_height = $new_width * $ratio;
+		$ratio		= $this->height / $this->width;
+		$new_height	= $new_width * $ratio;
 		
 		return $new_height;
 	}
@@ -277,34 +282,59 @@ class Resizer {
 		// Image to be resized is wider (landscape)
 		if ( $this->height < $this->width )
 		{
-			$optimal_width = $new_width;
-			$optimal_height= $this->get_size_by_fixed_width( $new_width );
+			$optimal_width	= $new_width;
+			$optimal_height	= $this->get_size_by_fixed_width( $new_width );
 		}
 		// Image to be resized is taller (portrait)
-		elseif ( $this->height > $this->width )
+		else if ( $this->height > $this->width )
 		{
-			$optimal_width = $this->get_size_by_fixed_height( $new_height );
-			$optimal_height= $new_height;
+			$optimal_width	= $this->get_size_by_fixed_height( $new_height );
+			$optimal_height	= $new_height;
 		}
 		// Image to be resizerd is a square
 		else
 		{
-			if ( $new_height < $new_width ) {
-				$optimal_width = $new_width;
-				$optimal_height= $this->get_size_by_fixed_width( $new_width );
-			} else if ( $new_height > $new_width ) {
-				$optimal_width = $this->get_size_by_fixed_height( $new_height );
-				$optimal_height= $new_height;
-			} else {
+			if ( $new_height < $new_width )
+			{
+				$optimal_width	= $new_width;
+				$optimal_height	= $this->get_size_by_fixed_width( $new_width );
+			}
+			else if ( $new_height > $new_width )
+			{
+				$optimal_width	= $this->get_size_by_fixed_height( $new_height );
+				$optimal_height	= $new_height;
+			}
+			else
+			{
 				// Sqaure being resized to a square
-				$optimal_width = $new_width;
-				$optimal_height= $new_height;
+				$optimal_width	= $new_width;
+				$optimal_height	= $new_height;
 			}
 		}
 		
 		return array(
-			'optimal_width' => $optimal_width,
-			'optimal_height' => $optimal_height
+			'optimal_width'		=> $optimal_width,
+			'optimal_height'	=> $optimal_height
+		);
+	}
+	
+	/**
+	 * Resizes an image so it fits entirely inside the given dimensions.
+	 * @param  int    $new_width  The width of the image
+	 * @param  int    $new_height The height of the image
+	 * @return array
+	 */
+	private function get_size_by_fit( $new_width , $new_height )
+	{
+		
+		$height_ratio	= $this->height / $new_height;
+		$width_ratio	= $this->width /  $new_width;
+		
+		$max = max( $height_ratio , $width_ratio );
+		
+		return array(
+			'optimal_width'		=> $this->width / $max,
+			'optimal_height'	=> $this->height / $max,
 		);
 	}
 	
@@ -317,8 +347,8 @@ class Resizer {
 	 */
 	private function get_optimal_crop( $new_width , $new_height )
 	{
-		$height_ratio = $this->height / $new_height;
-		$width_ratio  = $this->width /  $new_width;
+		$height_ratio	= $this->height / $new_height;
+		$width_ratio	= $this->width /  $new_width;
 		
 		if ( $height_ratio < $width_ratio ) {
 			$optimal_ratio = $height_ratio;
@@ -326,17 +356,17 @@ class Resizer {
 			$optimal_ratio = $width_ratio;
 		}
 		
-		$optimal_height = $this->height / $optimal_ratio;
-		$optimal_width  = $this->width  / $optimal_ratio;
+		$optimal_height	= $this->height / $optimal_ratio;
+		$optimal_width	= $this->width  / $optimal_ratio;
 		
 		return array(
-			'optimal_width' => $optimal_width,
-			'optimal_height' => $optimal_height
+			'optimal_width'		=> $optimal_width,
+			'optimal_height'	=> $optimal_height
 		);
 	}
 	
 	/**
-	 * Crops an image from its center 
+	 * Crops an image from its center
 	 * @param  int    $optimal_width  The width of the image
 	 * @param  int    $optimal_height The height of the image
 	 * @param  int    $new_width      The new width
@@ -351,9 +381,25 @@ class Resizer {
 		
 		$crop = $this->image_resized;
 		
+		$dest_offset_x	= max( 0, -$crop_start_x );
+		$dest_offset_y	= max( 0, -$crop_start_y );
+		$crop_start_x	= max( 0, $crop_start_x );
+		$crop_start_y	= max( 0, $crop_start_y );
+		$dest_width		= min( $optimal_width, $new_width );
+		$dest_height	= min( $optimal_height, $new_height );
+		
 		// Now crop from center to exact requested size
 		$this->image_resized = imagecreatetruecolor( $new_width , $new_height );
-		imagecopyresampled( $this->image_resized , $crop , 0 , 0 , $crop_start_x , $crop_start_y , $new_width , $new_height  , $new_width , $new_height );
+		
+		imagealphablending( $crop , true );
+		imagealphablending( $this->image_resized , false );
+		imagesavealpha( $this->image_resized , true );
+		
+		imagefilledrectangle( $this->image_resized , 0 , 0 , $new_width , $new_height,
+			imagecolorallocatealpha( $this->image_resized , 255 , 255 , 255 , 127 )
+		);
+		
+		imagecopyresampled( $this->image_resized , $crop , $dest_offset_x , $dest_offset_y , $crop_start_x , $crop_start_y , $dest_width , $dest_height , $dest_width , $dest_height );
 		
 		return true;
 	}
